@@ -1,18 +1,18 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include <Windows.h>
+#include <stdio.h>
 
-#define MEAN_AND_LEAN
+#define n 8
 
 typedef struct gameState
 {
-	int gameState[8];
+	int gameState[n];
 }state;
 
 state createInitialState();
 int utility(state s);
-float temperature(float time);
+double temperature(double time);
 state generateNextRandom(state currentState);
 state simulatedAnnealing(state initialState);
 
@@ -20,16 +20,27 @@ int main()
 {
 	srand(time(NULL));
 	state initialState;
-	//randomly generate initial state
-	initialState = simulatedAnnealing(initialState);
-	//return solution
-	char string[9];
-	for (int i = 0; i < 8; i++)
+
+	for (int count = 0; count < 100; count++)
 	{
-		string[i] = initialState.gameState[i] + 48;
+		initialState = createInitialState();
+
+		initialState = simulatedAnnealing(initialState);
+
+		if (utility(initialState) == 0)
+		{
+			for (int i = 0; i < n; i++)
+			{
+				printf("%d ", initialState.gameState[i]);
+			}
+			printf("\n");
+		}
+		else
+		{
+			printf("FAILURE\n");
+		}
 	}
 
-	OutputDebugString(string);
 
 	return 0;
 }
@@ -37,7 +48,7 @@ int main()
 state createInitialState()
 {
 	state s;
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < n; i++)
 	{
 		s.gameState[i] = rand() % 7 + 1;
 	}
@@ -48,8 +59,8 @@ state createInitialState()
 state simulatedAnnealing(state initialState)
 {
 	int deltaUtil = 0;
-	float time = 1;
-	float Temperature = temperature(time);
+	double time = 1;
+	double Temperature = temperature(time);
 
 	state current = initialState;
 	state next;
@@ -70,21 +81,22 @@ state simulatedAnnealing(state initialState)
 		}
 
 		time++;
+		Temperature = temperature(time);
 	}
 
 	return current;
 }
 
-float temperature(float time) 
+double temperature(double time) 
 {
-	time = 5000 - time * 0.1;
+	time = 200 - time * 0.001;
 	return time;
 }
 
 state generateNextRandom(state currentState)
 {
-	int column = rand() % 8;
-	int pos = rand() % 8 + 1;
+	int column = rand() % n;
+	int pos = rand() % n + 1;
 
 	currentState.gameState[column] = pos;
 
@@ -93,7 +105,27 @@ state generateNextRandom(state currentState)
 
 int utility (state s)
 {
-	for (int i = 0; i < 8; i++)
+	int utility = 0;
+	for (int i = 0; i < n; i++)
 	{
+		for (int j = i + 1; j < n; j++)
+		{
+			if (s.gameState[i] == s.gameState[j])
+			{
+				utility++;
+			}
+
+			else if (s.gameState[i] == s.gameState[j] + i - j)
+			{
+				utility++;
+			}
+
+			else if (s.gameState[i] == s.gameState[j] - i + j)
+			{
+				utility++;
+			}
+		}
 	}
+
+	return utility;
 }
